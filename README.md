@@ -41,17 +41,17 @@ source venv/bin/activate
 ```
 <br />
 
-Install requirements
+Install requirements.
 
 ```bash
 pip install -r requirements.txt
 ```
 <br />
 
-Run fastapi server
+Start the [fastapi](https://fastapi.tiangolo.com/) server.
 
 ```bash
-fastapi dev main.py
+fastapi dev src/main.py
 ```
 
 ## Top Contributors
