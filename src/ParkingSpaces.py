@@ -20,10 +20,10 @@ class ParkingSpaces:
     exclude_locs = set(['Fullerton Free Church', 'S8 and S10'])
 
     parking_dict = {
-      'Nutwood Structure': {'available': None, 'total': 2504, 'perc_full': None},
-      'State College Structure': {'available': None, 'total': 1373, 'perc_full': None},
-      'Eastside North': {'available': None, 'total': 1880, 'perc_full': None},
-      'Eastside South': {'available': None, 'total': 1242, 'perc_full': None},
+      'Nutwood_Structure': {'available': None, 'total': 2504, 'perc_full': None},
+      'State_College_Structure': {'available': None, 'total': 1373, 'perc_full': None},
+      'Eastside_North': {'available': None, 'total': 1880, 'perc_full': None},
+      'Eastside_South': {'available': None, 'total': 1242, 'perc_full': None},
     }
     # Iterate through rows in table
     for tr in all_tr:
@@ -47,9 +47,11 @@ class ParkingSpaces:
       avail_count = int(avail_count)
 
       # Valid parking spot if this point is reached
-      parking_dict[struct_name]['available'] = avail_count
-      parking_dict[struct_name]['perc_full'] = round(1 - (avail_count / parking_dict[struct_name]['total']), 2)
-      parking_dict[struct_name]['price_in_cents'] = self.get_dynamic_price(parking_dict[struct_name]['perc_full'])
+      struct_key = struct_name.replace(' ', '_')  # Remove spaces from name so we can use key in url
+      parking_dict[struct_key]['name'] = struct_name
+      parking_dict[struct_key]['available'] = avail_count
+      parking_dict[struct_key]['perc_full'] = round(1 - (avail_count / parking_dict[struct_key]['total']), 2)
+      parking_dict[struct_key]['price_in_cents`'] = self.get_dynamic_price(parking_dict[struct_key]['perc_full'])
 
     return parking_dict
 
