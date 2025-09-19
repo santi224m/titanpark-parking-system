@@ -4,6 +4,7 @@ import requests
 class ParkingSpaces:
   def __init__(self):
     self.url = 'https://parking.fullerton.edu/ParkingLotCounts/mobile.aspx'
+    self.base_price = 100  # Price in cents
   
   def get_available_parking(self):
     # Get data from CSUF parking services website
@@ -48,8 +49,20 @@ class ParkingSpaces:
       # Valid parking spot if this point is reached
       parking_dict[struct_name]['available'] = avail_count
       parking_dict[struct_name]['perc_full'] = round(1 - (avail_count / parking_dict[struct_name]['total']), 2)
+      parking_dict[struct_name]['price_in_cents'] = self.get_dynamic_price(parking_dict[struct_name]['perc_full'])
 
     return parking_dict
+
+  def get_dynamic_price(self, perc_full):
+    """Set a price based on how full the structure is"""
+    if perc_full <= 0.4:
+      return self.base_price
+    elif perc_full <= 0.6:
+      return self.base_price * 1.5
+    elif perc_full <= 0.8:
+      return self.base_price * 2.0
+    else:
+      return self.base_price * 2.5
 
 if __name__ == "__main__":
   ps = ParkingSpaces()
