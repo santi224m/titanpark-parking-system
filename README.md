@@ -48,11 +48,21 @@ pip install -r requirements.txt
 ```
 <br />
 
+Install [PostgreSQL](https://www.postgresql.org/download/) and run the ```setup.sql``` script.
+
+```bash
+cd database/
+sudo -u postgres psql -f setup.sql
+cd ../
+```
+
 Start the [fastapi](https://fastapi.tiangolo.com/) server.
 
 ```bash
 fastapi dev src/main.py
 ```
+
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in the browser.
 
 ## API Routes
 
