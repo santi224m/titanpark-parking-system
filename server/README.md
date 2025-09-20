@@ -37,7 +37,7 @@ sudo mkdir -p /opt/titanpark
 sudo chown deploy:deploy /opt/titanpark
 cd /opt/titanpark
 git clone https://github.com/santi224m/titanpark-parking-system.git
-`cd titanpark-parking-system/`
+cd titanpark-parking-system/
 ```
 
 ## Make ```deploy.sh``` executable
@@ -50,7 +50,7 @@ chmod +x /opt/titanpark/titanpark-parking-system/server/deploy.sh
 ## Setup systemd service
 
 ```bash
-cp /opt/titanpark/titanpark-parking-system/server/titanpark.service /etc/systemd/system/titanpark.service
+sudo cp /opt/titanpark/titanpark-parking-system/server/titanpark.service /etc/systemd/system/titanpark.service
 sudo systemctl daemon-reload
 sudo systemctl enable titanpark
 sudo systemctl start titanpark
@@ -59,7 +59,7 @@ sudo systemctl start titanpark
 ## Setup nginx
 
 ```bash
-cp /opt/titanpark/titanpark-parking-system/server/titanpark.nginx /etc/nginx/sites-available/titanpark
+sudo cp /opt/titanpark/titanpark-parking-system/server/titanpark.nginx /etc/nginx/sites-available/titanpark
 sudo ln -s /etc/nginx/sites-available/titanpark /etc/nginx/sites-enabled/
 sudo nginx -t
 sudo systemctl reload nginx
