@@ -44,6 +44,7 @@ git clone https://github.com/santi224m/titanpark-parking-system.git
 
 ```bash
 chmod +x /opt/titanpark/titanpark-parking-system/server/deploy.sh
+/opt/titanpark/titanpark-parking-system/server/deploy.sh
 ```
 
 ## Setup systemd service

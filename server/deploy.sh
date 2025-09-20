@@ -2,7 +2,7 @@
 set -e
 
 APP_DIR="/opt/titanpark/titanpark-parking-system"
-SERVICE_NAME="titanpark-parking-system"
+SERVICE_NAME="titanpark"
 
 echo "Starting deployment..."
 
