@@ -1,0 +1,14 @@
+[Unit]
+Description=TitanPark Parking Microservice
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/opt/titanpark/titanpark-parking-system
+Environment=PATH=/opt/titanpark/titanpark-parking-system/venv/bin
+ExecStart=/opt/titanpark/titanpark-parking-system/venv/bin/python -m uvicorn src.main:app --host 0.0.0.0 --port 8000
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
