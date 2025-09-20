@@ -48,11 +48,32 @@ pip install -r requirements.txt
 ```
 <br />
 
+Install [PostgreSQL](https://www.postgresql.org/download/) and run the ```setup.sql``` script.
+
+```bash
+cd database/
+sudo -u postgres psql -f setup.sql
+cd ../
+```
+
 Start the [fastapi](https://fastapi.tiangolo.com/) server.
 
 ```bash
 fastapi dev src/main.py
 ```
+
+Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in the browser.
+
+## API Routes
+
+| Method | Endpoint | Description | Parameters | Response |
+|--------|----------|-------------|------------|----------|
+| GET | `/parking_data/all` | Get live parking data for all parking structures | None | JSON with all parking structure data |
+| GET | `/parking_data/{struct_name}` | Get live parking data for a specific parking structure | `struct_name` (path) - Name of the parking structure | JSON with specific parking structure data |
+| POST | `/add_vehicle` | Add a user's vehicle to the database | `user_id` (query), `make` (query), `model` (query), `year` (query), `color` (query), `license_plate` (query) | Confirmation response |
+| GET | `/get_user_vehicles` | Get a list of vehicles belonging to a user | `user_id` (query) - User identifier | JSON array of user's vehicles |
+| POST | `/add_listing` | Add a listing to the database | `user_id` (query), `price` (query), `structure_id` (query), `floor` (query), `vehicle_id` (query), `comment` (query) | Confirmation response |
+| GET | `/get_listings` | Get a list of all currently available listings | None | JSON array of all available listings |
 
 ## Top Contributors
 
