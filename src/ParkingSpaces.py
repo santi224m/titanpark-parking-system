@@ -51,7 +51,7 @@ class ParkingSpaces:
       parking_dict[struct_key]['name'] = struct_name
       parking_dict[struct_key]['available'] = avail_count
       parking_dict[struct_key]['perc_full'] = round(1 - (avail_count / parking_dict[struct_key]['total']), 2)
-      parking_dict[struct_key]['price_in_cents`'] = self.get_dynamic_price(parking_dict[struct_key]['perc_full'])
+      parking_dict[struct_key]['price_in_cents'] = int(self.get_dynamic_price(parking_dict[struct_key]['perc_full']))
 
     return parking_dict
 
