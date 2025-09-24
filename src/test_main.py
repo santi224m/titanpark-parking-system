@@ -65,3 +65,13 @@ def test_TC_LPD2():
 
       # Test that name is correct
       assert res['name'] == struct.replace('_', ' ')
+
+def test_TC_LPD3():
+    """
+    Users should get an error if they make a call to ”/parking_data/{struct_name}" with a structure that isn’t in our list of supported parking structures.
+    """
+    response = client.get("/parking_data/Fake_Structure")
+    assert response.status_code == 200
+    res_json = response.json()
+    assert "Error" in res_json
+    assert res_json['Error'] == "Structure 'Fake_Structure' not in parking data"
