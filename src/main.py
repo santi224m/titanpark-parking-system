@@ -136,7 +136,7 @@ def get_listings():
                 L.user_id,
                 L.post_date,
                 L.price,
-                PS.name,
+                PS.name AS structure_name,
                 L.floor,
                 V.make,
                 V.model,

@@ -79,3 +79,32 @@ class TestHelper():
       if res is None or len(res) == 0:
         return None
       return res
+
+  @staticmethod
+  def insert_db_listing(user_id: str, price: int, structure_id: int, floor: int, vehicle_uuid: str, comment: str):
+    """Insert a listing into the database"""
+    with DBHandler() as curr:
+      curr.execute(
+        """
+        INSERT INTO listing (
+          user_id,
+          price,
+          structure_id,
+          floor,
+          vehicle_id,
+          comment
+        ) VALUES (%s, %s, %s, %s, %s, %s)
+        RETURNING id;
+        """, (
+          user_id,
+          price,
+          structure_id,
+          floor,
+          vehicle_uuid,
+          comment
+        )
+      )
+      res = curr.fetchone()
+      assert res is not None and len(res) == 1
+      # Return listing uuid
+      return res[0]
