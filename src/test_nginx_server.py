@@ -1,7 +1,7 @@
 import requests
 
 class TestNginxHTTPS:
-  PARKING_DOMAIN = "parking.titanpark.online"  # Replace with your actual domain
+  PARKING_DOMAIN = "parking.titanpark.online"
   HTTPS_URL = f"https://{PARKING_DOMAIN}/docs"
   HTTP_URL = f"http://{PARKING_DOMAIN}/docs"
 
