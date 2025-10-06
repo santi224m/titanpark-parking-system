@@ -64,6 +64,15 @@ fastapi dev src/main.py
 
 Open [http://127.0.0.1:8000](http://127.0.0.1:8000) in the browser.
 
+## Testing
+
+We use ```pytest``` to run unit tests. Running the code below will output a coverage report as html.
+
+```bash
+cd src/
+pytest --cov=main --cov-report=html --cov-report=term-missing
+```
+
 ## API Routes
 
 | Method | Endpoint | Description | Parameters | Response |

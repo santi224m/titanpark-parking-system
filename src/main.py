@@ -40,7 +40,8 @@ def add_vehicle(user_id: str, make: str, model: str, year: int, color: str, lice
                     year,
                     color,
                     license_plate
-                ) VALUES (%s, %s, %s, %s, %s, %s);
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id;
                 """, (
                     user_id,
                     make,
@@ -50,9 +51,14 @@ def add_vehicle(user_id: str, make: str, model: str, year: int, color: str, lice
                     license_plate
                 )
             )
-        return {"message": "Vehicle inserted to database successfully"}
+            res = curr.fetchone()
+            if res is not None and len(res) > 0:
+                vehicle_uuid = res[0]
+            else:
+                vehicle_uuid = None
+        return {"status": "success", "message": "Vehicle inserted to database successfully", "vehicle_uuid": vehicle_uuid}
     except Exception as e:
-        return {"message": f"Error inserting vehicle to database: {e}"}
+        return {"status": "error", "message": f"Error inserting vehicle to database: {e}"}
 
 @app.get("/get_user_vehicles")
 def get_user_vehicles(user_id: str):
@@ -99,7 +105,8 @@ def add_listing(user_id: str, price: int, structure_id: int, floor: int, vehicle
                     floor,
                     vehicle_id,
                     comment
-                ) VALUES (%s, %s, %s, %s, %s, %s);
+                ) VALUES (%s, %s, %s, %s, %s, %s)
+                RETURNING id;
                 """, (
                     user_id,
                     price,
@@ -109,9 +116,14 @@ def add_listing(user_id: str, price: int, structure_id: int, floor: int, vehicle
                     comment
                 )
             )
-        return {"message": "Listing inserted to database successfully"}
+            res = curr.fetchone()
+            if res is not None and len(res) > 0:
+                listing_uuid = res[0]
+            else:
+                listing_uuid = None
+        return {"status": "success", "message": "Listing inserted to database successfully", "listing_uuid": listing_uuid}
     except Exception as e:
-        return {"message": f"Error inserting listing to database: {e}"}
+        return {"status": "success", "message": f"Error inserting listing to database: {e}"}
 
 @app.get("/get_listings")
 def get_listings():
@@ -124,7 +136,7 @@ def get_listings():
                 L.user_id,
                 L.post_date,
                 L.price,
-                PS.name,
+                PS.name AS structure_name,
                 L.floor,
                 V.make,
                 V.model,
