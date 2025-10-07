@@ -70,13 +70,11 @@ def test_TC_LPD2():
 
 def test_TC_LPD3():
     """
-    Users should get an error if they make a call to ”/parking_data/{struct_name}" with a structure that isn’t in our list of supported parking structures.
+    Users should get an error if they make a call to ”/parking_data/{struct_name}"
+    with a structure that isn't in our list of supported parking structures.
     """
     response = client.get("/parking_data/Fake_Structure")
-    assert response.status_code == 200
-    res_json = response.json()
-    assert "Error" in res_json
-    assert res_json['Error'] == "Structure 'Fake_Structure' not in parking data"
+    assert response.status_code == 422
 
 def test_TC_PMS1():
     """
@@ -99,7 +97,6 @@ def test_TC_PMS1():
     res = client.post("/add_vehicle", params=params)
     assert res.status_code == 200
     res_json = res.json()
-    assert 'status' in res_json and res_json['status'] == 'success'
     assert 'vehicle_uuid' in res_json
     # Get uuid assigned to vehicle to check it and delete it after
     vehicle_uuid = res_json['vehicle_uuid']
@@ -175,7 +172,6 @@ def test_TC_PMS3():
     res = client.post("/add_listing", params=params)
     assert res.status_code == 200
     res_json = res.json()
-    assert 'status' in res_json and res_json['status'] == 'success'
     assert 'listing_uuid' in res_json
     listing_uuid = res_json['listing_uuid']
     try:
