@@ -72,3 +72,45 @@ In GitHub repo, go to ```Settings → Secrets and variables → Actions```, and 
 * ```HOST```: Linode server IP address
 * ```USERNAME```: ```deploy```
 * ```SSH_KEY```: Contents of your private key (~/.ssh/titanpark_deploy)
+
+## Add password to Postgres database
+
+```bash
+sudo -u postgres psql
+```
+
+```psql
+ALTER USER postgres WITH PASSWORD 'new_password';
+\q
+```
+
+Update ```pg_hba.conf``` to use md5. Replace ```[VERSION]``` with actual Postgres version.
+
+```bash
+sudo nano /etc/postgresql/[VERSION]/main/pg_hba.conf
+```
+
+Updated line should look like this:
+
+```conf
+local   all             postgres                                md5
+```
+
+Restart postgres service
+
+```bash
+sudo systemctl restart postgresql
+```
+
+Create environment file with password in project directory
+
+```bash
+cd /opt/titanpark/titanpark-parking-system/src
+nano .env
+```
+
+```.env``` file:
+
+```env
+DB_PASSWORD=new_password
+```
