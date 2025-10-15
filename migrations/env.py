@@ -12,7 +12,7 @@ config = context.config
 
 db_url = os.getenv(
     "DATABASE_URL",
-    "postgresql+psycopg2://titanpark:titanpark@localhost:5432/titanpark_parking_system"  # safe local fallback
+    "postgresql+psycopg2://postgres@localhost:5432/titanpark_parking_system"  # safe local fallback aligned with app
 )
 
 if not db_url:

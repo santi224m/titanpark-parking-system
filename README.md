@@ -36,8 +36,8 @@ cd titanpark-parking-system/
 Create a virtual environment.
 
 ```bash
-python -m venv venv
-source venv/bin/activate
+python -m venv .venv
+source .venv/bin/activate
 ```
 <br />
 
@@ -48,7 +48,20 @@ pip install -r requirements.txt
 ```
 <br />
 
-Install PostgreSQL (or ensure the Docker container is running), then apply the Alembic migrations:
+Install PostgreSQL (or ensure the Docker container is running).
+
+If using native Postgres (first-time setup):
+
+```bash
+# create the database (first time only)
+psql -U postgres -d postgres -f database/setup.sql
+# this works on macOS, Windows (if psql is in PATH), and Linux (if logged in as postgres).
+
+# set connection URL for Alembic
+export DATABASE_URL=postgresql+psycopg2://postgres@localhost:5432/titanpark_parking_system
+```
+
+Then apply the Alembic migrations:
 
 ```bash
 alembic upgrade head
@@ -57,10 +70,12 @@ alembic upgrade head
 If you're using Docker:
 
 ```bash
-docker exec -it titanpark-backend alembic upgrade head
+docker compose up -d db
+export DATABASE_URL=postgresql+psycopg2://postgres:postgres@localhost:5432/titanpark_parking_system
+alembic upgrade head
 ```
 
-This will automatically create the tables and seed the default parking structures.
+This will automatically create the tables and insert the default parking structures.
 
 <br />
 

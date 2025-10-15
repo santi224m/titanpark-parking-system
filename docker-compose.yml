@@ -1,10 +1,10 @@
 services:
   db:
     image: postgres:16
-    container_name: titanpark-postgres
+    container_name: titanpark-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: titanpark
+      POSTGRES_USER: postgres
       POSTGRES_PASSWORD: titanpark
       POSTGRES_DB: titanpark_parking_system
     ports:
@@ -12,7 +12,7 @@ services:
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U titanpark -d titanpark_parking_system"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d titanpark_parking_system"]
       interval: 5s
       timeout: 3s
       retries: 10
