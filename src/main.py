@@ -40,34 +40,25 @@ def get_parking_structure_data(struct_name: str):
 
 @app.post("/add_vehicle")
 def add_vehicle(user_id: str, make: str, model: str, year: int, color: str, license_plate: str):
-    """Add a user's vehicle to the database"""
+    """Add a user's vehicle to the database (idempotent on license_plate)."""
     try:
         with DBHandler() as curr:
             curr.execute(
                 """
-                INSERT INTO vehicle (
-                    user_id,
-                    make,
-                    model,
-                    year,
-                    color,
-                    license_plate
-                ) VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO vehicle (user_id, make, model, year, color, license_plate)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (license_plate)
+                DO UPDATE SET
+                    user_id = EXCLUDED.user_id,
+                    make    = EXCLUDED.make,
+                    model   = EXCLUDED.model,
+                    year    = EXCLUDED.year,
+                    color   = EXCLUDED.color
                 RETURNING id;
-                """, (
-                    user_id,
-                    make,
-                    model,
-                    year,
-                    color,
-                    license_plate
-                )
+                """,
+                (user_id, make, model, year, color, license_plate),
             )
-            res = curr.fetchone()
-            if res is not None and len(res) > 0:
-                vehicle_uuid = res[0]
-            else:
-                vehicle_uuid = None
+            vehicle_uuid = curr.fetchone()[0]
         return {"vehicle_uuid": vehicle_uuid}
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error inserting vehicle to database: {e}")
