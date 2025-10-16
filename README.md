@@ -81,6 +81,7 @@ pytest --cov=main --cov-report=html --cov-report=term-missing
 | GET | `/parking_data/{struct_name}` | Get live parking data for a specific parking structure | `struct_name` (path) - Name of the parking structure | JSON with specific parking structure data |
 | POST | `/add_vehicle` | Add a user's vehicle to the database | `user_id` (query), `make` (query), `model` (query), `year` (query), `color` (query), `license_plate` (query) | Confirmation response |
 | GET | `/get_user_vehicles` | Get a list of vehicles belonging to a user | `user_id` (query) - User identifier | JSON array of user's vehicles |
+| POST | `/delete_vehicle` | Delete a vehicle from the database | `vehicle_id` (query) | Confirmation response |
 | POST | `/add_listing` | Add a listing to the database | `user_id` (query), `price` (query), `structure_id` (query), `floor` (query), `vehicle_id` (query), `comment` (query) | Confirmation response |
 | GET | `/get_listings` | Get a list of all currently available listings | None | JSON array of all available listings |
 
