@@ -6,6 +6,7 @@ from DBHandler import DBHandler
 
 app = FastAPI()
 
+
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
     try:
@@ -15,6 +16,7 @@ async def docs_redirect():
             status_code=500,
             detail=f"Error trying to redirect to API documentation page: {e}"
         )
+
 
 @app.get("/parking_data/all")
 def get_all_parking_data():
@@ -29,14 +31,17 @@ def get_all_parking_data():
             detail=f"Error trying to fetch parking data: {e}"
         )
 
+
 @app.get("/parking_data/{struct_name}")
 def get_parking_structure_data(struct_name: str):
     """Get live parking data for a specific parking structure"""
     ps = ParkingSpaces()
     available_parking = ps.get_available_parking()
     if struct_name not in available_parking:
-        raise HTTPException(status_code=422, detail=f"Structure '{struct_name}' not in parking data")
+        raise HTTPException(
+            status_code=422, detail=f"Structure '{struct_name}' not in parking data")
     return available_parking[struct_name]
+
 
 @app.post("/add_vehicle")
 def add_vehicle(user_id: str, make: str, model: str, year: int, color: str, license_plate: str):
@@ -70,7 +75,9 @@ def add_vehicle(user_id: str, make: str, model: str, year: int, color: str, lice
                 vehicle_uuid = None
         return {"vehicle_uuid": vehicle_uuid}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error inserting vehicle to database: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error inserting vehicle to database: {e}")
+
 
 @app.get("/get_user_vehicles")
 def get_user_vehicles(user_id: str):
@@ -107,6 +114,26 @@ def get_user_vehicles(user_id: str):
             status_code=500,
             detail=f"Error trying to get user {user_id}'s vehicles: {e}"
         )
+
+
+@app.post("/delete_vehicle")
+def delete_vehicle(vehicle_id: str):
+    """Delete a vehicle from the database"""
+    try:
+        with DBHandler() as curr:
+            curr.execute(
+                """
+                DELETE FROM vehicle
+                WHERE id = %s;
+                """, (vehicle_id, )
+            )
+            return {"msg": "Deleted vehicle successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting vehicle with id {vehicle_id} from database: {e}"
+        )
+
 
 @app.post("/add_listing")
 def add_listing(user_id: str, price: int, structure_id: int, floor: int, vehicle_id: str, comment: str):
@@ -145,6 +172,7 @@ def add_listing(user_id: str, price: int, structure_id: int, floor: int, vehicle
             status_code=500,
             detail=f"Error inserting listing to database: {e}"
         )
+
 
 @app.get("/get_listings")
 def get_listings():

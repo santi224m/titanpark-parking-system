@@ -13,6 +13,7 @@ expected_structs = [
     'Eastside_South'
 ]
 
+
 def test_root_to_docs_redirect():
     """
     Users should be redirected to the API documentation when the visit the
@@ -21,6 +22,7 @@ def test_root_to_docs_redirect():
     response = client.get("/")
     assert response.status_code == 200
     assert response.url == 'http://testserver/docs'
+
 
 def test_TC_LPD1():
     """
@@ -48,6 +50,7 @@ def test_TC_LPD1():
         # Test that name is correct
         assert curr_struct['name'] == struct.replace('_', ' ')
 
+
 def test_TC_LPD2():
     """
     Live parking data API at path “/parking_data/{struct_name}” should return
@@ -55,18 +58,19 @@ def test_TC_LPD2():
     parking structure.
     """
     for struct in expected_structs:
-      response = client.get(f"/parking_data/{struct}")
-      assert response.status_code == 200
-      res = response.json()
+        response = client.get(f"/parking_data/{struct}")
+        assert response.status_code == 200
+        res = response.json()
 
-      # Test data types
-      assert type(res['available']) == int
-      assert type(res['total']) == int
-      assert type(res['perc_full']) == float
-      assert type(res['price_in_cents']) == int
+        # Test data types
+        assert type(res['available']) == int
+        assert type(res['total']) == int
+        assert type(res['perc_full']) == float
+        assert type(res['price_in_cents']) == int
 
-      # Test that name is correct
-      assert res['name'] == struct.replace('_', ' ')
+        # Test that name is correct
+        assert res['name'] == struct.replace('_', ' ')
+
 
 def test_TC_LPD3():
     """
@@ -75,6 +79,7 @@ def test_TC_LPD3():
     """
     response = client.get("/parking_data/Fake_Structure")
     assert response.status_code == 422
+
 
 def test_TC_PMS1():
     """
@@ -110,6 +115,7 @@ def test_TC_PMS1():
     assert color == db_color
     assert license_plate == db_license_plate
     TestHelper.delete_db_vehicle(vehicle_uuid)
+
 
 def test_TC_PMS2():
     """
@@ -150,6 +156,7 @@ def test_TC_PMS2():
     for uuid in vehicle_uuid_list:
         TestHelper.delete_db_vehicle(uuid)
 
+
 def test_TC_PMS3():
     """
     Test that “/add_listing” path inserts a parking listing in the database.
@@ -160,7 +167,8 @@ def test_TC_PMS3():
     price = 100
     floor = 3
     comment = 'This is a comment'
-    vehicle_uuid = TestHelper.insert_db_vehicle(user_id, 'Volkswagen', 'Jetta', 2014, 'red', 'SAFJLK212')
+    vehicle_uuid = TestHelper.insert_db_vehicle(
+        user_id, 'Volkswagen', 'Jetta', 2014, 'red', 'SAFJLK212')
     params = {
         'user_id': user_id,
         'price': price,
@@ -192,6 +200,7 @@ def test_TC_PMS3():
     finally:
         TestHelper.delete_db_listing(listing_uuid)
         TestHelper.delete_db_vehicle(vehicle_uuid)
+
 
 def test_TC_PMS4():
     """
@@ -328,9 +337,47 @@ def test_TC_PMS4():
     finally:
         TestHelper.delete_db_listing(listing_1_uuid)
         TestHelper.delete_db_vehicle(listing_1['vehicle_id'])
-        
+
         TestHelper.delete_db_listing(listing_2_uuid)
         TestHelper.delete_db_vehicle(listing_2['vehicle_id'])
 
         TestHelper.delete_db_listing(listing_3_uuid)
         TestHelper.delete_db_vehicle(listing_3['vehicle_id'])
+
+
+def test_TC_PMS5():
+    """
+    Test that “/delete_vehicle” path correctly deletes a vehicle from the database.
+    """
+    # Insert test vehicle into database
+    vehicle = {
+        'user_id': 'testuser123',
+        'vehicle_id': None,
+        'make': 'Volkswagen',
+        'model': 'Jetta',
+        'year': 2014,
+        'color': 'Red',
+        'license_plate': 'SAFJLK212',
+    }
+
+    try:
+        vehicle['vehicle_id'] = TestHelper.insert_db_vehicle(
+            vehicle['user_id'],
+            vehicle['make'],
+            vehicle['model'],
+            vehicle['year'],
+            vehicle['color'],
+            vehicle['license_plate'],
+        )
+
+        # Delete vehicle using API
+        params = {'vehicle_id': vehicle['vehicle_id']}
+        res = client.post("/delete_vehicle", params=params)
+        assert res.status_code == 200
+
+        # Check that vehicle is no longer in database
+        db_vehicle = TestHelper.get_db_vehicle(vehicle['vehicle_id'])
+        assert db_vehicle is None
+    finally:
+        # Delete vehicle using helper in case test fails
+        TestHelper.delete_db_vehicle(vehicle['vehicle_id'])
