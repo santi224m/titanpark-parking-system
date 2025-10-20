@@ -14,7 +14,7 @@ jobs:
         image: postgres:16
         env:
           POSTGRES_USER: postgres
-          POSTGRES_PASSWORD: postgres
+          POSTGRES_PASSWORD: titanpark
           POSTGRES_DB: titanpark_parking_system
         ports:
           - 5432:5432
@@ -25,7 +25,7 @@ jobs:
           --health-retries=20
 
     env:
-      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/titanpark_parking_system
+      DATABASE_URL: postgresql://postgres:titanpark@localhost:5432/titanpark_parking_system
       PYTHONPATH: .
       ENV: TEST
 
@@ -45,6 +45,9 @@ jobs:
           if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
           pip install pytest pytest-cov alembic psycopg2-binary
 
+      - name: Install psql client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+
       - name: Wait for Postgres
         run: |
           for i in {1..40}; do
@@ -52,20 +55,20 @@ jobs:
             sleep 1
           done
 
-      - name: Run DB migrations (if any)
+      - name: Apply Alembic migrations
+        run: alembic upgrade head
+
+      - name: Sanity-check listing columns
         run: |
-          if [ -f alembic.ini ]; then alembic upgrade head; fi
+          psql "$DATABASE_URL" -c \
+            "SELECT column_name FROM information_schema.columns WHERE table_name='listing' ORDER BY column_name;"
 
       - name: Run tests with coverage
-        run: |
-          pytest --cov --cov-report=term-missing
-        # To enforce a minimum bar, use:
-        # run: pytest --cov --cov-report=term-missing --cov-fail-under=90
+        run: pytest --cov --cov-report=term-missing
 
       - name: Generate HTML coverage (artifact)
         if: always()
-        run: |
-          pytest --cov --cov-report=html || true
+        run: pytest --cov --cov-report=html || true
 
       - name: Upload coverage artifact
         if: always()
