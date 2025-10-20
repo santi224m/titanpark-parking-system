@@ -3,6 +3,8 @@ from fastapi.testclient import TestClient
 from main import app
 from helpers import TestHelper
 from datetime import datetime, timedelta
+import pytest
+import json
 
 client = TestClient(app)
 
@@ -334,3 +336,59 @@ def test_TC_PMS4():
 
         TestHelper.delete_db_listing(listing_3_uuid)
         TestHelper.delete_db_vehicle(listing_3['vehicle_id'])
+
+# Making sure all ranges are valid in /parking_data/all
+
+def test_parking_data_ranges():
+
+    # Call endpoint that returns all parking structure data
+    res = client.get("/parking_data/all")
+
+    # Expect a 200 OK response
+    assert res.status_code == 200
+
+    # Parse JSON response
+    data = res.json()
+
+    print("DEBUG parking_data:", json.dumps(data, indent=2))
+    # Check that all values are within expected ranges
+    for s in expected_structs:
+        d = data[s]
+        assert 0 <= d["available"] <= d["total"]
+        assert 0 <= d["price_in_cents"]
+        assert 0.0 <= d["perc_full"] <= 100.0
+
+@pytest.mark.parametrize("payload", [
+    # Empty user_id, invalid year (non-integer)
+    {"user_id": "", "make":"VW","model":"Jetta","year":"hello","color":"red","license_plate":"X"},
+
+    # No User_ID parameter at all
+    {"make":"VW","model":"Jetta","year":"2014","color":"red","license_plate":"X"},
+])
+def test_add_vehicle_validation_errors(payload):
+    #Testing that the invalid inputs return 400 or 422 status codes
+    res = client.post("/add_vehicle", params=payload)
+    assert res.status_code in (400, 422)
+
+def test_add_listing_invalid_price():
+    # Insert a vehicle for the user first
+    v = TestHelper.insert_db_vehicle("u1","VW","Jetta",2014,"red","PLT123")
+    try:
+        # Adding listing with invalid price
+        res = client.post("/add_listing", params={
+            "user_id":"u1","price":-1,"structure_id":1,"floor":1,"vehicle_id":v,"comment":""
+        })
+        # Expect a 400 or 422 error
+        assert res.status_code in (400, 422)
+    finally:
+        TestHelper.delete_db_vehicle(v)
+
+def test_get_user_vehicles_empty():
+    # Getting vehicles for a user that does not exist should return empty dict/list
+    res = client.get("/get_user_vehicles", params={"user_id":"no_such_user"})
+    # Expect a 200 OK response
+    assert res.status_code == 200
+    payload = res.json()
+    # Payload should be empty dict or list
+    assert payload in ({}, [])
+

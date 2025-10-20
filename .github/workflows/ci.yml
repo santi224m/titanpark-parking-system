@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: titanpark_parking_system
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U postgres"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/titanpark_parking_system
+      PYTHONPATH: .
+      ENV: TEST
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install deps
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-cov alembic psycopg2-binary
+
+      - name: Wait for Postgres
+        run: |
+          for i in {1..40}; do
+            pg_isready -h localhost -p 5432 -U postgres && break
+            sleep 1
+          done
+
+      - name: Run DB migrations (if any)
+        run: |
+          if [ -f alembic.ini ]; then alembic upgrade head; fi
+
+      - name: Run tests with coverage
+        run: |
+          pytest --cov --cov-report=term-missing
+        # To enforce a minimum bar, use:
+        # run: pytest --cov --cov-report=term-missing --cov-fail-under=90
+
+      - name: Generate HTML coverage (artifact)
+        if: always()
+        run: |
+          pytest --cov --cov-report=html || true
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: htmlcov
+          path: htmlcov
