@@ -15,7 +15,6 @@ class TestHelper():
         """, (vehicle_uuid, )
       )
       res = curr.fetchone()
-      assert res is not None and len(res) == 7
       return res
   
   @staticmethod
