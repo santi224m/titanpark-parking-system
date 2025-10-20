@@ -25,6 +25,7 @@ jobs:
           --health-retries=20
 
     env:
+      # include password so Alembic/psycopg2 can auth:
       DATABASE_URL: postgresql://postgres:titanpark@localhost:5432/titanpark_parking_system
       PYTHONPATH: .
       ENV: TEST
@@ -56,12 +57,10 @@ jobs:
           done
 
       - name: Apply Alembic migrations
-        run: alembic upgrade head
-
-      - name: Sanity-check listing columns
         run: |
-          psql "$DATABASE_URL" -c \
-            "SELECT column_name FROM information_schema.columns WHERE table_name='listing' ORDER BY column_name;"
+          alembic upgrade head
+          echo "Alembic heads:" && alembic heads
+          echo "Alembic current:" && alembic current -v
 
       - name: Run tests with coverage
         run: pytest --cov --cov-report=term-missing
