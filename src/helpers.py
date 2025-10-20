@@ -33,24 +33,22 @@ class TestHelper():
   def insert_db_vehicle(user_id: str, make: str, model: str, year: int, color: str, license_plate: str):
     """Insert a vehicle to the database and return its uuid"""
     with DBHandler() as curr:
-      curr.execute(
-        """
-        INSERT INTO vehicle
-        (
-          user_id,
-          make,
-          model,
-          year,
-          color,
-          license_plate
-        ) VALUES (%s, %s, %s, %s, %s, %s)
-        RETURNING id;
-        """, (user_id, make, model, year, color, license_plate)
-      )
-      res = curr.fetchone()
-      assert res is not None and len(res) == 1
-      vehicle_uuid = res[0]
-      return vehicle_uuid
+        curr.execute(
+            """
+            INSERT INTO vehicle (user_id, make, model, year, color, license_plate)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            ON CONFLICT (license_plate)
+            DO UPDATE SET
+                user_id = EXCLUDED.user_id,
+                make    = EXCLUDED.make,
+                model   = EXCLUDED.model,
+                year    = EXCLUDED.year,
+                color   = EXCLUDED.color
+            RETURNING id;
+            """,
+            (user_id, make, model, year, color, license_plate),
+        )
+        return curr.fetchone()[0]
   
   @staticmethod
   def delete_db_listing(listing_uuid: str):
@@ -67,17 +65,26 @@ class TestHelper():
   def get_db_listing(listing_uuid: str):
     """Return a listing row"""
     with DBHandler() as curr:
-      curr.execute(
-        """
-        SELECT *
-        FROM listing
-        WHERE id = %s;
-        """, (listing_uuid, )
-      )
-      res = curr.fetchone()
-      if res is None or len(res) == 0:
-        return None
-      return res
+        curr.execute(
+            """
+            SELECT
+              id,
+              user_id,
+              post_date,
+              price,
+              structure_id,
+              floor,
+              vehicle_id,
+              comment
+            FROM listing
+            WHERE id = %s;
+            """,
+            (listing_uuid,),
+        )
+        res = curr.fetchone()
+        if res is None or len(res) == 0:
+            return None
+        return res
 
   @staticmethod
   def insert_db_listing(user_id: str, price: int, structure_id: int, floor: int, vehicle_uuid: str, comment: str):
