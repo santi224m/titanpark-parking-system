@@ -25,7 +25,7 @@ jobs:
           --health-retries=20
 
     env:
-      # include password so Alembic/psycopg2 can auth:
+      # IMPORTANT: must match service creds above
       DATABASE_URL: postgresql://postgres:titanpark@localhost:5432/titanpark_parking_system
       PYTHONPATH: .
       ENV: TEST
@@ -56,11 +56,31 @@ jobs:
             sleep 1
           done
 
+      # Ensure Alembic definitely uses DATABASE_URL:
+      # In alembic.ini, set: sqlalchemy.url = ${DATABASE_URL}
+      # (Optional belt & suspenders: in alembic/env.py set it from os.environ)
+
+      - name: Recreate DB (fresh for CI)
+        run: |
+          psql "postgresql://postgres:titanpark@localhost:5432/postgres" -c "DROP DATABASE IF EXISTS titanpark_parking_system;"
+          psql "postgresql://postgres:titanpark@localhost:5432/postgres" -c "CREATE DATABASE titanpark_parking_system;"
+
       - name: Apply Alembic migrations
         run: |
           alembic upgrade head
-          echo "Alembic heads:" && alembic heads
-          echo "Alembic current:" && alembic current -v
+          echo "=== Alembic heads ==="
+          alembic heads
+          echo "=== Alembic current ==="
+          alembic current -v
+
+      - name: Sanity-check schema
+        run: |
+          echo "=== Public tables ==="
+          psql "$DATABASE_URL" -c "SELECT table_name FROM information_schema.tables WHERE table_schema='public' ORDER BY 1;"
+          echo "=== listing columns ==="
+          psql "$DATABASE_URL" -c "SELECT column_name, data_type, is_nullable, column_default FROM information_schema.columns WHERE table_schema='public' AND table_name='listing' ORDER BY ordinal_position;"
+          echo "=== listing constraints ==="
+          psql "$DATABASE_URL" -c "SELECT conname, pg_get_constraintdef(oid) FROM pg_constraint WHERE conrelid = 'listing'::regclass ORDER BY 1;"
 
       - name: Run tests with coverage
         run: pytest --cov --cov-report=term-missing
