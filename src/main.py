@@ -6,6 +6,7 @@ from DBHandler import DBHandler
 
 app = FastAPI()
 
+
 @app.get("/", include_in_schema=False)
 async def docs_redirect():
     try:
@@ -16,61 +17,87 @@ async def docs_redirect():
             detail=f"Error trying to redirect to API documentation page: {e}"
         )
 
+
 @app.get("/parking_data/all")
 def get_all_parking_data():
     """Get live parking data for all parking structures"""
     try:
         ps = ParkingSpaces()
-        available_parking = ps.get_available_parking()
-        return available_parking
+        data = ps.get_available_parking()  # dict: {slug: {...}}
+
+        # Normalize impossible values per-structure (tiny, local fix)
+        for _, v in data.items():
+            try:
+                total = int(v.get("total", 0))
+                avail = int(v.get("available", 0))
+                if total < 0:
+                    total = 0
+                avail = max(0, min(avail, total))  # ensure 0 <= available <= total
+                v["total"] = total
+                v["available"] = avail
+
+                # recompute perc_full as a 0..100 percentage
+                v["perc_full"] = round((1 - (avail / total)) * 100, 2) if total > 0 else 0.0
+            except Exception:
+                # don’t take down the whole endpoint if one record is funky
+                pass
+
+        return data
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error trying to fetch parking data: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error trying to fetch parking data: {e}")
+
+
 
 @app.get("/parking_data/{struct_name}")
 def get_parking_structure_data(struct_name: str):
     """Get live parking data for a specific parking structure"""
     ps = ParkingSpaces()
-    available_parking = ps.get_available_parking()
-    if struct_name not in available_parking:
+    data = ps.get_available_parking()
+    if struct_name not in data:
         raise HTTPException(status_code=422, detail=f"Structure '{struct_name}' not in parking data")
-    return available_parking[struct_name]
+
+    v = data[struct_name]
+    try:
+        total = int(v.get("total", 0))
+        avail = int(v.get("available", 0))
+        if total < 0:
+            total = 0
+        avail = max(0, min(avail, total))
+        v["total"] = total
+        v["available"] = avail
+        v["perc_full"] = round((1 - (avail / total)) * 100, 2) if total > 0 else 0.0
+    except Exception:
+        pass
+
+    return v
+
 
 @app.post("/add_vehicle")
 def add_vehicle(user_id: str, make: str, model: str, year: int, color: str, license_plate: str):
-    """Add a user's vehicle to the database"""
+    """Add a user's vehicle to the database (idempotent on license_plate)."""
     try:
         with DBHandler() as curr:
             curr.execute(
                 """
-                INSERT INTO vehicle (
-                    user_id,
-                    make,
-                    model,
-                    year,
-                    color,
-                    license_plate
-                ) VALUES (%s, %s, %s, %s, %s, %s)
+                INSERT INTO vehicle (user_id, make, model, year, color, license_plate)
+                VALUES (%s, %s, %s, %s, %s, %s)
+                ON CONFLICT (license_plate)
+                DO UPDATE SET
+                    user_id = EXCLUDED.user_id,
+                    make    = EXCLUDED.make,
+                    model   = EXCLUDED.model,
+                    year    = EXCLUDED.year,
+                    color   = EXCLUDED.color
                 RETURNING id;
-                """, (
-                    user_id,
-                    make,
-                    model,
-                    year,
-                    color,
-                    license_plate
-                )
+                """,
+                (user_id, make, model, year, color, license_plate),
             )
-            res = curr.fetchone()
-            if res is not None and len(res) > 0:
-                vehicle_uuid = res[0]
-            else:
-                vehicle_uuid = None
+            vehicle_uuid = curr.fetchone()[0]
         return {"vehicle_uuid": vehicle_uuid}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error inserting vehicle to database: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error inserting vehicle to database: {e}")
+
 
 @app.get("/get_user_vehicles")
 def get_user_vehicles(user_id: str):
@@ -108,9 +135,32 @@ def get_user_vehicles(user_id: str):
             detail=f"Error trying to get user {user_id}'s vehicles: {e}"
         )
 
+
+@app.post("/delete_vehicle")
+def delete_vehicle(vehicle_id: str):
+    """Delete a vehicle from the database"""
+    try:
+        with DBHandler() as curr:
+            curr.execute(
+                """
+                DELETE FROM vehicle
+                WHERE id = %s;
+                """, (vehicle_id, )
+            )
+            return {"msg": "Deleted vehicle successfully"}
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error deleting vehicle with id {vehicle_id} from database: {e}"
+        )
+
+
 @app.post("/add_listing")
 def add_listing(user_id: str, price: int, structure_id: int, floor: int, vehicle_id: str, comment: str):
     """Add a listing to the database"""
+    if price < 0:
+        raise HTTPException(status_code=422, detail="price must be >= 0")
+    
     try:
         # Insert listing to database
         with DBHandler() as curr:
@@ -140,11 +190,11 @@ def add_listing(user_id: str, price: int, structure_id: int, floor: int, vehicle
             else:
                 listing_uuid = None
         return {"listing_uuid": listing_uuid}
+    except HTTPException:
+        raise
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Error inserting listing to database: {e}"
-        )
+        raise HTTPException(status_code=500, detail=f"Error inserting listing to database: {e}")
+
 
 @app.get("/get_listings")
 def get_listings():
