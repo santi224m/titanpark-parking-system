@@ -20,4 +20,4 @@ jobs:
         username: ${{ secrets.USERNAME }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          /opt/titanpark/deploy.sh
+          /opt/titanpark/titanpark-parking-system/server/deploy.sh

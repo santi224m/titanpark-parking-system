@@ -34,6 +34,14 @@ echo "Installing dependencies..."
 source venv/bin/activate
 pip install -r requirements.txt
 
+# Run tests before deployment
+echo "Running tests..."
+if ! pytest; then
+    echo "Tests failed! Deployment aborted."
+    exit 1
+fi
+echo "All tests passed!"
+
 # Restart the service
 echo "Restarting service..."
 sudo systemctl restart "$SERVICE_NAME"
