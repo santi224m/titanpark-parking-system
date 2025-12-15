@@ -34,6 +34,9 @@ echo "Installing dependencies..."
 source venv/bin/activate
 pip install -r requirements.txt
 
+# Run alembic to update database
+alembic upgrade head
+
 # Run tests before deployment
 echo "Running tests..."
 if ! pytest; then
