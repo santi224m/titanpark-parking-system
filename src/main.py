@@ -2,7 +2,9 @@ from fastapi import FastAPI, HTTPException
 from fastapi.responses import RedirectResponse
 
 from ParkingSpaces import ParkingSpaces
+from ParkingHistory import ParkingHistory
 from DBHandler import DBHandler
+from DBMethods import DBMethods as DB
 
 app = FastAPI()
 
@@ -46,8 +48,6 @@ def get_all_parking_data():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error trying to fetch parking data: {e}")
 
-
-
 @app.get("/parking_data/{struct_name}")
 def get_parking_structure_data(struct_name: str):
     """Get live parking data for a specific parking structure"""
@@ -71,6 +71,27 @@ def get_parking_structure_data(struct_name: str):
 
     return v
 
+@app.get("/history/parking_data/all")
+def get_all_parking_data_history():
+    """Get all parking data stored in the database over time"""
+    try:
+        with DBHandler() as curr:
+            history = DB.get_parking_history()
+            return history
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error trying to fetch parking data history: {e}")
+
+@app.get("/history/parking_data/{date}")
+def get_date_parking_data(date):
+    """
+    Get all parking data stored in the database for a specific day.
+    Date format: YYYY-MM-DD
+    """
+    try:
+        history = DB.get_parking_history(date=date)
+        return history
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error trying to fetch parking data history: {e}")
 
 @app.post("/add_vehicle")
 def add_vehicle(user_id: str, make: str, model: str, year: int, color: str, license_plate: str):
