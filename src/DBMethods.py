@@ -24,7 +24,7 @@ class DBMethods:
                   parking_structure AS PS ON PS.id = structure_id
     """
     if date is not None:
-       query += " WHERE PDH.datetime::timestamp::date = %s"
+       query += " WHERE (PDH.datetime AT TIME ZONE 'UTC' AT TIME ZONE 'America/Los_Angeles')::date = %s"
     with DBHandler() as curr:
       if date is None:
         curr.execute(query)
