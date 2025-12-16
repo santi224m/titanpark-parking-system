@@ -16,8 +16,8 @@ class DBMethods:
               PDH.available,
               PDH.total,
               PDH.perc_full,
-              timezone('US/Pacific', PDH.datetime) AS datetime,
-              timezone('US/Pacific', PDH.datetime)::timestamp::date AS date
+              timezone('America/Los_Angeles', PDH.datetime) AS datetime,
+              timezone('America/Los_Angeles', PDH.datetime)::timestamp::date AS date
           FROM
               parking_data_history AS PDH
               INNER JOIN
